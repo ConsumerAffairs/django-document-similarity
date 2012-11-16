@@ -4,3 +4,4 @@
 *.db
 .*.swp
 local_settings.py
+.coverage
