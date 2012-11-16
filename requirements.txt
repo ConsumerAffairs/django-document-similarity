@@ -16,3 +16,4 @@ simserver==0.1.4
 sqlitedict==1.0.8
 wsgiref==0.1.2
 nltk==2.0.4
+chardet==2.1.1
