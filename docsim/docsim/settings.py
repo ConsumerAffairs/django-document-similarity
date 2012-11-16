@@ -122,8 +122,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
-    'api',
     'django_extensions',
+    'documents',
     'south',
 )
 
@@ -156,7 +156,7 @@ LOGGING = {
     }
 }
 
-SIMSERVER_WORKING_DIR = os.path.join(base_dir, 'simserver')
+SIMSERVER_WORKING_DIR = '/home/docsim/simserver'
 
 try:
     from local_settings import *
