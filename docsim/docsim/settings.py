@@ -1,6 +1,7 @@
 # Django settings for docsim project.
 
 import os
+import sys
 
 base_dir = os.path.dirname(__file__)
 
@@ -15,12 +16,8 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'docsim.db',                      # Or path to database file if using sqlite3.
-        'USER': '',                      # Not used with sqlite3.
-        'PASSWORD': '',                  # Not used with sqlite3.
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'docsim.db',
     }
 }
 
@@ -78,7 +75,7 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+    # 'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 # Make this unique, and don't share it with anybody.
@@ -88,7 +85,7 @@ SECRET_KEY = 'i=1c)-)@mbky_bo!wk6)%64o5&amp;yxa6&amp;9-xck6c=3xtd3qj2una'
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
+    # 'django.template.loaders.eggs.Loader',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -107,12 +104,13 @@ ROOT_URLCONF = 'docsim.urls'
 WSGI_APPLICATION = 'docsim.wsgi.application'
 
 TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+    # Put strings here, like "/home/html/django_templates"
+    #   or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
 )
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -125,7 +123,7 @@ INSTALLED_APPS = (
     'api',
     'django_extensions',
     'south',
-)
+]
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
@@ -158,7 +156,29 @@ LOGGING = {
 
 SIMSERVER_WORKING_DIR = os.path.join(base_dir, 'simserver')
 
+if 'test' in sys.argv:
+    TEST_RUNNER = 'django.test.simple.DjangoTestSuiteRunner'
+    try:
+        from pkg_resources import WorkingSet, DistributionNotFound
+        working_set = WorkingSet()
+        working_set.require('django_nose')
+    except ImportError:
+        print 'setuptools not installed.  Weird.'
+    except DistributionNotFound:
+        print "django-nose not installed.  You'd like it."
+    else:
+        INSTALLED_APPS.append('django_nose')
+        TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+        }
+    }
+    DEBUG = True
+    TEMPLATE_DEBUG = True
+
 try:
-    from local_settings import *
+    from local_settings import *  # NOQA
 except ImportError:
     pass

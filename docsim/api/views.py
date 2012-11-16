@@ -1,3 +1,5 @@
+from json import dumps
+
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -31,7 +33,6 @@ def buffer_html_document(request):
 @csrf_exempt
 @require_POST
 def index(request):
-    import ipdb; ipdb.set_trace()
     buffered = request.POST.get('buffered')
     if buffered:
         service = get_service()
@@ -42,4 +43,3 @@ def index(request):
     else:
         # not implemented yet
         return HttpResponseBadRequest()
-
