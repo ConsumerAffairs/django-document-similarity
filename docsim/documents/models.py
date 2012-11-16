@@ -8,7 +8,7 @@ class Document(models.Model):
     text = models.TextField()
 
     def __unicode__(self):
-        return self.id
+        return unicode(self.id)
 
     def tokens(self):
-        return tokenize_html(self.text) 
+        return tokenize_html(self.text)

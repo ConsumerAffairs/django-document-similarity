@@ -1,48 +1,85 @@
+# -*- encoding: utf-8 -*-
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 import mox
 
-from api import views
+from .models import Document
+from .tokenizers import force_ascii
 
 
-class MockSimServerTestCase(TestCase):
-    '''Base class for API tests'''
+class MockTestCase(TestCase):
+    '''Base class for tests needing mock'''
 
     def setUp(self):
-        super(MockSimServerTestCase, self).setUp()
+        super(MockTestCase, self).setUp()
         self.mox = mox.Mox()
-        self.mox.StubOutWithMock(views, 'get_service')  # For safety
 
     def tearDown(self):
-        super(MockSimServerTestCase, self).tearDown()
+        super(MockTestCase, self).tearDown()
         self.mox.VerifyAll()
         self.mox.UnsetStubs()
 
-    def mox_service(self):
-        service = self.mox.CreateMockAnything()
-        views.get_service().AndReturn(service)
-        return service
+
+class ModelDocumentTest(TestCase):
+    def test_str(self):
+        doc = Document.objects.create(id='1', text='foo')
+        self.assertEqual(str(doc), '1')
+
+    def test_str_integer_id(self):
+        doc = Document.objects.create(id=1, text='foo')
+        self.assertEqual(str(doc), '1')
+
+    def test_tokenize_html(self):
+        doc = Document.objects.create(
+            id=1, text='<p>a simple document</p>')
+        self.assertEqual(doc.tokens(), ['simple', 'document'])
 
 
-class BufferHTMLDocTest(MockSimServerTestCase):
+class TokenizerForceAsciiTest(TestCase):
+    def test_plain_string(self):
+        test = 'This is a plain string'
+        self.assertEqual(test, force_ascii(test))
 
-    def test_buffer_doc(self):
+    def test_plain_unicode(self):
+        test = u'This is a unicode string'
+        self.assertEqual(str(test), force_ascii(test))
+
+    def test_latin1_as_utf8(self):
+        test = unicode('latin-1 is the bömb', 'latin-1').encode('utf-8')
+        expected = 'latin-1 is the bmb'
+        self.assertEqual(expected, force_ascii(test))
+
+
+class ViewAddOrUpdateTest(TestCase):
+
+    def test_add_doc(self):
         post = {
             'id': 1,
-            'html': '<p>a simple document</p>'
+            'text': '<p>a simple document</p>'
         }
+        self.assertFalse(Document.objects.exists())
 
-        service = self.mox_service()
-        service.buffer([{
-            'id': '1',
-            'tokens': ['simple', 'document']}])
-
-        self.mox.ReplayAll()
-        response = self.client.post(reverse('buffer_html'), post)
-        self.mox.VerifyAll()
+        response = self.client.post(reverse('add_or_update'), post)
 
         self.assertEqual(response.status_code, 202)
+        doc = Document.objects.get()
+        self.assertEqual(doc.id, str(post['id']))
+        self.assertEqual(doc.text, post['text'])
 
-    def test_bad_buffer_call(self):
-        response = self.client.post(reverse('buffer_html'), {})
+    def test_update_doc(self):
+        Document.objects.create(id='3', text='foobar')
+        post = {
+            'id': 3,
+            'text': '<p>baz</p>'
+        }
+
+        response = self.client.post(reverse('add_or_update'), post)
+
+        self.assertEqual(response.status_code, 202)
+        doc = Document.objects.get()
+        self.assertEqual(doc.id, str(post['id']))
+        self.assertEqual(doc.text, post['text'])
+
+    def test_bad_request(self):
+        response = self.client.post(reverse('add_or_update'), {})
         self.assertEqual(response.status_code, 400)
