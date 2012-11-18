@@ -5,7 +5,7 @@ from simserver import SessionServer
 from sklearn.cluster import DBSCAN
 from numpy import argwhere, identity
 
-from .models import Document
+from .models import Cluster, Document
 
 logging.basicConfig(
     format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -80,7 +80,7 @@ class DocSimServer(object):
             self._distance_matrix = 2 * (1 - s)
             return self._distance_matrix
 
-    def dbscan_clusters(self, eps=.5, min_samples=5):
+    def dbscan_clusters(self, eps=.4, min_samples=5):
         D = self.distance_matrix
         logging.info('starting dbscan')
         dbscan = DBSCAN(eps=eps, min_samples=min_samples, metric='precomputed')
@@ -88,6 +88,11 @@ class DocSimServer(object):
         labels = db.labels_
         clusters = [l for l in set(labels) if l > 0]  # outliers are -1
         logging.info('found %i clusters' % len(clusters))
-        return [
-            [self.index_id[i[0]] for i in argwhere(labels == c)]
-            for c in clusters]
+        for c in clusters:
+            cluster = Cluster(
+                parameters=dict(algorithm='DBSCAN', eps=eps,
+                                min_samples=min_samples))
+            cluster.save()
+            doc_ids = [self.index_id[i[0]] for i in argwhere(labels == c)]
+            logging.info('cluster %s: %s documents' % (cluster.id, len(doc_ids)))
+            cluster.documents.add(*doc_ids)
