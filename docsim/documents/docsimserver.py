@@ -54,27 +54,22 @@ class DocSimServer(object):
             self._id_index = dict((v, k) for k, v in self.index_id.iteritems())
             return self._id_index
 
-    @property
     def similarity_matrix(self):
-        try:
-            return self._similarity_matrix
-        except AttributeError:
-            logging.info('calculating similarity matrix')
-            s = identity(len(self.id_index))
-            for id in self.document_ids:
-                for sim_id, score, none in self.server.find_similar(
-                        id, min_score=.2, max_results=10000):
-                    if sim_id != id:
-                        s[self.id_index[id]][self.id_index[sim_id]] = score
-            self._similarity_matrix = s
-            return s
+        logging.info('calculating similarity matrix')
+        s = identity(len(self.id_index))
+        for id in self.document_ids:
+            for sim_id, score, none in self.server.find_similar(
+                    id, min_score=.2, max_results=10000):
+                if sim_id != id:
+                    s[self.id_index[id]][self.id_index[sim_id]] = score
+        return s
 
     @property
     def distance_matrix(self):
         try:
             return self._distance_matrix
         except AttributeError:
-            s = self.similarity_matrix
+            s = self.similarity_matrix()
             logging.info('converting similarity matrix to distance matrix')
             self._distance_matrix = 2 * (1 - s)
             return self._distance_matrix
