@@ -63,10 +63,9 @@ class DocSimServer(object):
             s = identity(len(self.id_index))
             for id in self.document_ids:
                 for sim_id, score, none in self.server.find_similar(
-                        str(id), min_score=.2, max_results=10000):
-                    if int(sim_id) != id:
-                        s[self.id_index[id]][
-                            self.id_index[int(sim_id)]] = score
+                        id, min_score=.2, max_results=10000):
+                    if sim_id != id:
+                        s[self.id_index[id]][self.id_index[sim_id]] = score
             self._similarity_matrix = s
             return s
 
