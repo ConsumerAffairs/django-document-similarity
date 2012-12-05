@@ -1,8 +1,10 @@
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 
-from .models import Document
+from .models import Cluster, Document
+from .serializers import ClusterSerializer, DocumentSerializer
 
 ACCEPTED = 202
 
@@ -17,3 +19,13 @@ def add_or_update(request):
         return HttpResponse(status=ACCEPTED)
     else:
         return HttpResponseBadRequest()
+
+
+class ClusterList(ListAPIView):
+    model = Cluster
+    serializer_class = ClusterSerializer
+
+
+class ClusterDetail(RetrieveAPIView):
+    model = Cluster
+    serializer_class = ClusterSerializer

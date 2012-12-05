@@ -122,6 +122,7 @@ INSTALLED_APPS = [
     # 'django.contrib.admindocs',
     'django_extensions',
     'documents',
+    'rest_framework',
     'south',
 ]
 

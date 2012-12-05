@@ -29,6 +29,7 @@ def force_ascii(s):
         try:
             return unicode(s, 'ascii', errors='ignore')
         except:
+            # TODO: write tests and docs exlaining this
             try:
                 s = unicode(s.decode(chardet.detect(s)['encoding']))
             finally:

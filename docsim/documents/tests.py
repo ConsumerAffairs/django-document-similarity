@@ -1,9 +1,11 @@
 # -*- encoding: utf-8 -*-
+from json import loads
+
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 import mox
 
-from .models import Document
+from .models import Cluster, Document
 from .tokenizers import force_ascii
 
 
@@ -83,3 +85,34 @@ class ViewAddOrUpdateTest(TestCase):
     def test_bad_request(self):
         response = self.client.post(reverse('add_or_update'), {})
         self.assertEqual(response.status_code, 400)
+
+
+class ClusterModelTest(TestCase):
+    def test_unicode(self):
+        cluster = Cluster()
+        self.assertEqual(unicode(cluster), '{}')
+        cluster.parameters['test'] = True
+        self.assertEqual(unicode(cluster), '{"test": true}')
+
+class APITest(TestCase):
+    def setUp(self):
+        self.doc1 = Document.objects.create(
+            id='test_document:1', text='testdoc1')
+        self.doc2 = Document.objects.create(
+            id='test_document:2', text='testdoc2')
+        self.cluster = Cluster.objects.create()
+        self.cluster.documents.add(self.doc1, self.doc2)
+
+    def test_get_cluster_list(self):
+        response = self.client.get(reverse('cluster-list'))
+        loaded = loads(response.content)
+        self.assertEqual(loaded[0]['id'], 1)
+        self.assertTrue(self.doc1.id in loaded[0]['documents'])
+        self.assertTrue(self.doc2.id in loaded[0]['documents'])
+
+    def test_get_cluster_detail(self):
+        response = self.client.get(reverse('cluster-detail', args=(1,)))
+        loaded = loads(response.content)
+        self.assertEqual(loaded['id'], 1)
+        self.assertTrue(self.doc1.id in loaded['documents'])
+        self.assertTrue(self.doc2.id in loaded['documents'])
