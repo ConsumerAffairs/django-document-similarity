@@ -10,6 +10,7 @@ urlpatterns = patterns(
     url(r'^clusters$', ClusterList.as_view(), name='cluster-list'),
     url(r'^clusters/(?P<pk>\d+)$', ClusterDetail.as_view(),
         name='cluster-detail'),
+    url(r'^find_similar$', 'find_similar', name='find-similar'),
 )
 
 urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json', 'api'])

@@ -19,6 +19,9 @@ class DocSimServer(object):
         if not self.server.stable.fresh_index:
             self.server.index(self.corpus)
 
+    def find_similar(self, *args, **kwargs):
+        return self.server.find_similar(*args, **kwargs)
+
     @property
     def corpus(self):
         try:

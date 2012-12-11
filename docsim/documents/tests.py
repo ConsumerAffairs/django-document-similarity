@@ -5,6 +5,7 @@ from django.test import TestCase
 from django.core.urlresolvers import reverse
 import mox
 
+from .docsimserver import DocSimServer
 from .models import Cluster, Document
 from .tokenizers import force_ascii
 
@@ -94,6 +95,7 @@ class ClusterModelTest(TestCase):
         cluster.parameters['test'] = True
         self.assertEqual(unicode(cluster), '{"test": true}')
 
+
 class APITest(TestCase):
     def setUp(self):
         self.doc1 = Document.objects.create(
@@ -116,3 +118,26 @@ class APITest(TestCase):
         self.assertEqual(loaded['id'], 1)
         self.assertTrue(self.doc1.id in loaded['documents'])
         self.assertTrue(self.doc2.id in loaded['documents'])
+
+
+class FindSimilarTest(MockTestCase):
+    def test_empty_post(self):
+        response = self.client.post(reverse('find-similar'), {})
+        self.assertEqual(response.status_code, 400)
+
+    def test_text(self):
+        self.mox.StubOutWithMock(DocSimServer, '__init__')
+        self.mox.StubOutWithMock(DocSimServer, 'find_similar')
+        DocSimServer.__init__()
+        DocSimServer.find_similar(
+            {'tokens': ['test']}, max_results=10).AndReturn(
+            [("test_document:1", 0.8776240944862366, None),
+             ("test_document:2", 0.8762409448623661, None),
+             ("test_document:3", 0.7762409448623668, None)])
+        self.mox.ReplayAll()
+        response = self.client.post(reverse('find-similar'), {'text': 'test'})
+        self.assertEqual(
+            response.content, 
+            '[["test_document:1", 0.8776240944862366, null],'
+            ' ["test_document:2", 0.8762409448623661, null],'
+            ' ["test_document:3", 0.7762409448623668, null]]')
