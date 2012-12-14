@@ -34,15 +34,20 @@ class ClusterDetail(RetrieveAPIView):
     serializer_class = ClusterSerializer
 
 
+@csrf_exempt
 @require_POST
 def find_similar(request):
-    id = request.POST.get('id')
-    text = request.POST.get('text')
-    if not text:
+    try:
+        text = request.POST['text']
+        min_score = float(request.POST.get('min_score', .8))
+        max_results = int(request.POST.get('max_results', 10))
+    except:
         return HttpResponseBadRequest()
+    id = request.POST.get('id')
     doc = Document(id=id, text=text)
     dss = DocSimServer()
-    similar = dss.find_similar({'tokens': doc.tokens()}, max_results=10)
+    similar = dss.find_similar({'tokens': doc.tokens()}, min_score=min_score,
+                               max_results=max_results)
     return HttpResponse(content=dumps(similar), content_type='text/json')
 
 # maybe later
