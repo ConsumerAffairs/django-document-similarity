@@ -10,6 +10,7 @@ from .models import Cluster, Document
 from .serializers import ClusterSerializer
 
 ACCEPTED = 202
+DSS = DocSimServer()
 
 
 @csrf_exempt
@@ -45,11 +46,10 @@ def find_similar(request):
         return HttpResponseBadRequest()
     id = request.POST.get('id')
     doc = Document(id=id, text=text)
-    dss = DocSimServer()
     tokens = doc.tokens()
-    similar = dss.find_similar({'tokens': tokens}, min_score=min_score,
+    similar = DSS.find_similar({'tokens': tokens}, min_score=min_score,
                                max_results=max_results)
     if id:
         doc.save()
-        dss.server.index([{'id': id, 'tokens': tokens}])
+        DSS.server.index([{'id': id, 'tokens': tokens}])
     return HttpResponse(content=dumps(similar), content_type='text/json')
