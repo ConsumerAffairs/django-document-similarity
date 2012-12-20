@@ -7,7 +7,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView
 
 from .docsimserver import DocSimServer
 from .models import Cluster, Document
-from .serializers import ClusterSerializer  # , DocumentSerializer
+from .serializers import ClusterSerializer
 
 ACCEPTED = 202
 
@@ -46,12 +46,10 @@ def find_similar(request):
     id = request.POST.get('id')
     doc = Document(id=id, text=text)
     dss = DocSimServer()
-    similar = dss.find_similar({'tokens': doc.tokens()}, min_score=min_score,
+    tokens = doc.tokens()
+    similar = dss.find_similar({'tokens': tokens}, min_score=min_score,
                                max_results=max_results)
+    if id:
+        doc.save()
+        dss.server.index([{'id': id, 'tokens': tokens}])
     return HttpResponse(content=dumps(similar), content_type='text/json')
-
-# maybe later
-#
-#    if id:
-#        doc.save()
-#        dss.server.index([{'id': id, 'tokens': tokens}])
