@@ -19,6 +19,6 @@ urlpatterns = patterns(
     # Uncomment to add the django rest framework browseable API login/logout
     # url(r'^api-auth/', include('rest_framework.urls',
     #                            namespace='rest_framework')),
-    
+
     url(r'^documents/', include('documents.urls')),
 )
