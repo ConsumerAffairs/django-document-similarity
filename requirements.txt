@@ -18,3 +18,4 @@ wsgiref==0.1.2
 nltk==2.0.4
 chardet==2.1.1
 djangorestframework==2.1.6
+ujson==1.23

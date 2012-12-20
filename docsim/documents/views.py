@@ -1,4 +1,4 @@
-from json import dumps
+from ujson import dumps
 
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
