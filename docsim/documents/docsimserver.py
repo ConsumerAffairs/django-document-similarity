@@ -91,5 +91,6 @@ class DocSimServer(object):
                                 min_samples=min_samples))
             cluster.save()
             doc_ids = [self.index_id[i[0]] for i in argwhere(labels == c)]
-            logging.info('cluster %s: %s documents' % (cluster.id, len(doc_ids)))
+            logging.info(
+                'cluster %s: %s documents' % (cluster.id, len(doc_ids)))
             cluster.documents.add(*doc_ids)

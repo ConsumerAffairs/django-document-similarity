@@ -130,14 +130,14 @@ class FindSimilarTest(MockTestCase):
         self.mox.StubOutWithMock(DocSimServer, 'find_similar')
         DocSimServer.__init__()
         DocSimServer.find_similar(
-            {'tokens': ['test']}, max_results=10).AndReturn(
-            [("test_document:1", 0.8776240944862366, None),
-             ("test_document:2", 0.8762409448623661, None),
-             ("test_document:3", 0.7762409448623668, None)])
+            {'tokens': ['test']}, max_results=10, min_score=0.8).AndReturn(
+                [("test_document:1", 0.8776240944862366, None),
+                 ("test_document:2", 0.8762409448623661, None),
+                 ("test_document:3", 0.7762409448623668, None)])
         self.mox.ReplayAll()
         response = self.client.post(reverse('find-similar'), {'text': 'test'})
         self.assertEqual(
-            response.content, 
+            response.content,
             '[["test_document:1", 0.8776240944862366, null],'
             ' ["test_document:2", 0.8762409448623661, null],'
             ' ["test_document:3", 0.7762409448623668, null]]')
