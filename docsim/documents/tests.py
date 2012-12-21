@@ -8,6 +8,7 @@ import mox
 from .docsimserver import DocSimServer
 from .models import Cluster, Document
 from .tokenizers import force_ascii
+from documents import views
 
 
 class MockTestCase(TestCase):
@@ -52,13 +53,10 @@ class TokenizerForceAsciiTest(TestCase):
         self.assertEqual(expected, force_ascii(test))
 
 
-class ViewAddOrUpdateTest(TestCase):
+class ViewAddOrUpdateTest(MockTestCase):
 
     def test_add_doc(self):
-        post = {
-            'id': 1,
-            'text': '<p>a simple document</p>'
-        }
+        post = {'id': 1, 'text': '<p>a simple document</p>'}
         self.assertFalse(Document.objects.exists())
 
         response = self.client.post(reverse('add_or_update'), post)
@@ -70,10 +68,7 @@ class ViewAddOrUpdateTest(TestCase):
 
     def test_update_doc(self):
         Document.objects.create(id='3', text='foobar')
-        post = {
-            'id': 3,
-            'text': '<p>baz</p>'
-        }
+        post = {'id': 3, 'text': '<p>baz</p>'}
 
         response = self.client.post(reverse('add_or_update'), post)
 
@@ -85,6 +80,21 @@ class ViewAddOrUpdateTest(TestCase):
     def test_bad_request(self):
         response = self.client.post(reverse('add_or_update'), {})
         self.assertEqual(response.status_code, 400)
+
+    def test_index(self):
+        self.mox.StubOutWithMock(DocSimServer, '__init__')
+        DocSimServer.server = self.mox.CreateMockAnything()
+        DocSimServer.server.index(
+            [{'tokens': ['test'], 'id': 'test_document:4'}])
+        self.mox.ReplayAll()
+        post = {'id': 'test_document:4', 'text': 'test', 'index': True}
+        self.assertFalse(Document.objects.exists())
+        response = self.client.post(reverse('add_or_update'), post)
+        self.mox.VerifyAll()
+        self.assertEqual(response.status_code, 202)
+        doc = Document.objects.get()
+        self.assertEqual(doc.id, str(post['id']))
+        self.assertEqual(doc.text, post['text'])
 
 
 class ClusterModelTest(TestCase):
@@ -125,10 +135,10 @@ class FindSimilarTest(MockTestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_text(self):
-        self.mox.StubOutWithMock(DocSimServer, '__init__')
-        self.mox.StubOutWithMock(DocSimServer, 'find_similar')
-        DocSimServer.__init__()
-        DocSimServer.find_similar(
+        self.mox.StubOutWithMock(views, 'dss')
+        dss = self.mox.CreateMockAnything()
+        views.dss().AndReturn(dss)
+        dss.find_similar(
             {'tokens': ['test']}, max_results=10, min_score=0.8).AndReturn(
                 [("test_document:1", 0.8776240944862366, None),
                  ("test_document:2", 0.8762409448623661, None),

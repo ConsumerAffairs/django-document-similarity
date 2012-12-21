@@ -10,7 +10,14 @@ from .models import Cluster, Document
 from .serializers import ClusterSerializer
 
 ACCEPTED = 202
-DSS = DocSimServer()
+_dss = None
+
+
+def dss():
+    global _dss
+    if not _dss:
+        _dss = DocSimServer()
+    return _dss
 
 
 @csrf_exempt
@@ -19,7 +26,10 @@ def add_or_update(request):
     id = request.POST.get('id')
     text = request.POST.get('text')
     if id and text:
-        Document(id=id, text=text).save()
+        doc = Document(id=id, text=text)
+        doc.save()
+        if request.POST.get('index'):
+            dss().server.index([{'id': id, 'tokens': doc.tokens()}])
         return HttpResponse(status=ACCEPTED)
     else:
         return HttpResponseBadRequest()
@@ -47,9 +57,9 @@ def find_similar(request):
     id = request.POST.get('id')
     doc = Document(id=id, text=text)
     tokens = doc.tokens()
-    similar = DSS.find_similar({'tokens': tokens}, min_score=min_score,
-                               max_results=max_results)
+    similar = dss().find_similar({'tokens': tokens}, min_score=min_score,
+                                 max_results=max_results)
     if id:
         doc.save()
-        DSS.server.index([{'id': id, 'tokens': tokens}])
+        dss().server.index([{'id': id, 'tokens': tokens}])
     return HttpResponse(content=dumps(similar), content_type='text/json')
