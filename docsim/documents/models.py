@@ -1,3 +1,6 @@
+# Copyright (C) 2013 Consumers Unified LLC
+# Licensed under the GNU AGPL v3.0 - http://www.gnu.org/licenses/agpl.html
+
 from django.db import models
 from django_extensions.db.fields.json import JSONField
 

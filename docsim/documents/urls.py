@@ -1,3 +1,6 @@
+# Copyright (C) 2013 Consumers Unified LLC
+# Licensed under the GNU AGPL v3.0 - http://www.gnu.org/licenses/agpl.html
+
 from django.conf.urls import patterns, url
 from rest_framework.urlpatterns import format_suffix_patterns
 

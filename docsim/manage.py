@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+#
+# Copyright (C) 2013 Consumers Unified LLC
+# Licensed under the GNU AGPL v3.0 - http://www.gnu.org/licenses/agpl.html
+
 import os
 import sys
 

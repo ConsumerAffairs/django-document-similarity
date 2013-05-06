@@ -1,4 +1,7 @@
 # -*- encoding: utf-8 -*-
+# Copyright (C) 2013 Consumers Unified LLC
+# Licensed under the GNU AGPL v3.0 - http://www.gnu.org/licenses/agpl.html
+
 from json import loads
 
 from django.test import TestCase
