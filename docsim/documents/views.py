@@ -2,10 +2,11 @@ from ujson import dumps
 
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods, require_POST
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 
 from .docsimserver import DocSimServer
+from .forms import FindSimilarByIdForm, FindSimilarByTextForm
 from .models import Cluster, Document
 from .serializers import ClusterSerializer
 
@@ -46,20 +47,34 @@ class ClusterDetail(RetrieveAPIView):
 
 
 @csrf_exempt
-@require_POST
+@require_http_methods(['GET', 'POST'])
 def find_similar(request):
-    try:
-        text = request.POST['text']
-        min_score = float(request.POST.get('min_score', .8))
-        max_results = int(request.POST.get('max_results', 10))
-    except:
-        return HttpResponseBadRequest()
-    id = request.POST.get('id')
-    doc = Document(id=id, text=text)
-    tokens = doc.tokens()
-    similar = dss().find_similar({'tokens': tokens}, min_score=min_score,
-                                 max_results=max_results)
-    if id:
-        doc.save()
-        dss().server.index([{'id': id, 'tokens': tokens}])
+    defaults = {'min_score': .8, 'max_results': 10}
+    if request.method == 'GET':
+        defaults.update(request.GET.dict())
+        form = FindSimilarByIdForm(defaults)
+        if not form.is_valid():
+            return HttpResponseBadRequest(dumps(form.errors))
+        doc_id = form.cleaned_data['id']
+        min_score = form.cleaned_data['min_score']
+        max_results = form.cleaned_data['max_results']
+        try:
+            similar = dss().find_similar(doc_id, min_score=min_score,
+                                         max_results=max_results)
+        except ValueError:
+            return HttpResponseBadRequest(u'document %s not in index' % doc_id)
+    else:
+        assert request.method == 'POST'
+        defaults.update(request.POST.dict())
+        form = FindSimilarByTextForm(defaults)
+        if not form.is_valid():
+            return HttpResponseBadRequest(dumps(form.errors))
+        text = form.cleaned_data['text']
+        min_score = form.cleaned_data['min_score']
+        max_results = form.cleaned_data['max_results']
+        doc = Document(text=text)
+        tokens = doc.tokens()
+        similar = dss().find_similar(
+            {'tokens': tokens}, min_score=min_score, 
+            max_results=max_results)
     return HttpResponse(content=dumps(similar), content_type='text/json')
